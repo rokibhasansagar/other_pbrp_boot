@@ -142,6 +142,8 @@ LOCAL_C_INCLUDES += \
     system/core/adb \
     system/core/libsparse \
     external/zlib \
+    system/core/libpixelflinger/include \
+    external/freetype/include \
     $(LOCAL_PATH)/bootloader_message_twrp/include
 
 LOCAL_C_INCLUDES += bionic
