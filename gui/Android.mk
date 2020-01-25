@@ -140,6 +140,12 @@ define PB_UNSUPPORTED_RESOLUTION_ERR
 endef
 
 TWRP_RES := $(LOCAL_PATH)/theme/common/fonts
+TWRP_RES += $(LOCAL_PATH)/theme/common/fonts_choco
+TWRP_RES += $(LOCAL_PATH)/theme/common/fonts_dancing
+TWRP_RES += $(LOCAL_PATH)/theme/common/fonts_google
+TWRP_RES += $(LOCAL_PATH)/theme/common/fonts_kraken
+TWRP_RES += $(LOCAL_PATH)/theme/common/fonts_malaga
+TWRP_RES += $(LOCAL_PATH)/theme/common/fonts_samsung
 TWRP_RES += $(LOCAL_PATH)/theme/common/languages
 
 ifeq ($(TW_CUSTOM_THEME),)
