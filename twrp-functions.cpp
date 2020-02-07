@@ -59,6 +59,10 @@ extern "C" {
 	#include "libcrecovery/common.h"
 }
 
+#ifdef TW_INCLUDE_LIBRESETPROP
+#include <resetprop.h>
+#endif
+
 static const string tmp = "/tmp/pb/";
 static const string ramdisk = tmp + "ramdisk/";
 static const string split_img = tmp + "split_img/";
@@ -2117,6 +2121,14 @@ int TWFunc::stream_adb_backup(string &Restore_Name) {
 	if (ret != 0)
 		return -1;
 	return ret;
+}
+
+int TWFunc::Property_Override(string Prop_Name, string Prop_Value) {
+#ifdef TW_INCLUDE_LIBRESETPROP
+    return setprop(Prop_Name.c_str(), Prop_Value.c_str(), false);
+#else
+    return -2;
+#endif
 }
 
 std::string TWFunc::get_cache_dir() {
