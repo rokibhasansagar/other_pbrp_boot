@@ -419,7 +419,7 @@ static int keymaster_sign_object(struct crypt_mnt_ftr *ftr,
             // so) because we really should be using a proper deterministic
             // RSA padding function, such as PKCS1.
             memcpy(to_sign + 1, object, min((size_t)RSA_KEY_SIZE_BYTES - 1, object_size));
-            SLOGI("Signing safely-padded object");
+            SLOGI("Signing safely-padded object\n");
             break;
         default:
             SLOGE("Unknown KDF type %d", ftr->kdf_type);
