@@ -427,6 +427,45 @@ static int keymaster_sign_object(struct crypt_mnt_ftr *ftr,
 
     int rc = -1;
 
+#if TW_KEYMASTER_MAX_API == 3
+    rc = keymaster_sign_object_for_cryptfs_scrypt(ftr->keymaster_blob, ftr->keymaster_blob_size,
+            KEYMASTER_CRYPTFS_RATE_LIMIT, to_sign, to_sign_size, signature, signature_size,
+            ftr->keymaster_blob, KEYMASTER_BLOB_SIZE, &ftr->keymaster_blob_size);
+    if (rc != 0)
+       goto old;
+#endif //TW_KEYMASTER_MAX_API == 3
+#if TW_KEYMASTER_MAX_API >= 4
+    for (;;) {
+        auto result = keymaster_sign_object_for_cryptfs_scrypt(
+            ftr->keymaster_blob, ftr->keymaster_blob_size, KEYMASTER_CRYPTFS_RATE_LIMIT, to_sign,
+            to_sign_size, signature, signature_size);
+        switch (result) {
+            case KeymasterSignResult::ok:
+                return 0;
+            case KeymasterSignResult::upgrade:
+                break;
+            default:
+                rc = 1;
+        }
+	if (rc != 1) {
+            SLOGD("Upgrading key\n");
+             if (keymaster_upgrade_key_for_cryptfs_scrypt(
+                    RSA_KEY_SIZE, RSA_EXPONENT, KEYMASTER_CRYPTFS_RATE_LIMIT, ftr->keymaster_blob,
+                    ftr->keymaster_blob_size, ftr->keymaster_blob, KEYMASTER_BLOB_SIZE,
+                    &ftr->keymaster_blob_size) != 0) {
+                 SLOGE("Failed to upgrade key\n");
+                 rc = -1;
+                 goto old;
+             }
+        }
+        /*if (put_crypt_ftr_and_key(ftr) != 0) {
+            SLOGE("Failed to write upgraded key to disk");
+        }*/
+        SLOGD("Key upgraded successfully\n");
+    }
+#endif
+
+old:
 #if TW_KEYMASTER_MAX_API >= 1
     keymaster0_device_t *keymaster0_dev = 0;
     keymaster1_device_t *keymaster1_dev = 0;
@@ -437,7 +476,7 @@ static int keymaster_sign_object(struct crypt_mnt_ftr *ftr,
     if (keymaster_init(&keymaster0_dev)) {
 #endif
         printf("Failed to init keymaster 0/1\n");
-        goto initfail;
+        goto out;
     }
     if (keymaster0_dev) {
         keymaster_rsa_sign_params_t params;
@@ -604,39 +643,6 @@ static int keymaster_sign_object(struct crypt_mnt_ftr *ftr,
         if (rc == 0)
             return 0; // otherwise we'll try for a newer keymaster API
 
-initfail:
-#if TW_KEYMASTER_MAX_API == 3
-    return keymaster_sign_object_for_cryptfs_scrypt(ftr->keymaster_blob, ftr->keymaster_blob_size,
-            KEYMASTER_CRYPTFS_RATE_LIMIT, to_sign, to_sign_size, signature, signature_size,
-            ftr->keymaster_blob, KEYMASTER_BLOB_SIZE, &ftr->keymaster_blob_size);
-#endif //TW_KEYMASTER_MAX_API == 3
-#if TW_KEYMASTER_MAX_API >= 4
-    for (;;) {
-        auto result = keymaster_sign_object_for_cryptfs_scrypt(
-            ftr->keymaster_blob, ftr->keymaster_blob_size, KEYMASTER_CRYPTFS_RATE_LIMIT, to_sign,
-            to_sign_size, signature, signature_size);
-        switch (result) {
-            case KeymasterSignResult::ok:
-                return 0;
-            case KeymasterSignResult::upgrade:
-                break;
-            default:
-                return -1;
-        }
-        SLOGD("Upgrading key\n");
-        if (keymaster_upgrade_key_for_cryptfs_scrypt(
-                RSA_KEY_SIZE, RSA_EXPONENT, KEYMASTER_CRYPTFS_RATE_LIMIT, ftr->keymaster_blob,
-                ftr->keymaster_blob_size, ftr->keymaster_blob, KEYMASTER_BLOB_SIZE,
-                &ftr->keymaster_blob_size) != 0) {
-            SLOGE("Failed to upgrade key\n");
-            return -1;
-        }
-        /*if (put_crypt_ftr_and_key(ftr) != 0) {
-            SLOGE("Failed to write upgraded key to disk");
-        }*/
-        SLOGD("Key upgraded successfully\n");
-    }
-#endif
     return -1;
 }
 
