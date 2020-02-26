@@ -13,6 +13,10 @@ LOCAL_SHARED_LIBRARIES += libz libc
 LOCAL_C_INCLUDES += external/libselinux/include
 LOCAL_SHARED_LIBRARIES += libselinux
 
+ifeq ($(PB_DEBUG), true)
+    LOCAL_CFLAGS += -DDEBUG
+endif
+
 ifeq ($(TW_INCLUDE_CRYPTO_FBE), true)
     LOCAL_SHARED_LIBRARIES += libe4crypt
     LOCAL_CFLAGS += -DHAVE_EXT4_CRYPT
@@ -30,6 +34,10 @@ LOCAL_SRC_FILES := append.c block.c decode.c encode.c extract.c handle.c output.
 LOCAL_C_INCLUDES += $(LOCAL_PATH) \
                     external/zlib
 LOCAL_STATIC_LIBRARIES += libz libc
+
+ifeq ($(PB_DEBUG), true)
+    LOCAL_CFLAGS += -DDEBUG
+endif
 
 LOCAL_C_INCLUDES += external/libselinux/include
 LOCAL_STATIC_LIBRARIES += libselinux
